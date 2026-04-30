@@ -41,8 +41,8 @@ Un laboratoire virtuel interactif couvrant 10 domaines scientifiques fondamentau
 ## 🚀 Démarrage rapide
 
 ```bash
-git clone https://github.com/Friteover/Mini-Labs.git
-cd simulateur-scientifique
+git clone https://github.com/Friteover/Mini-Labs
+cd Mini-Labs
 # Ouvrir index.html dans un navigateur — aucune installation requise
 open index.html
 ```
