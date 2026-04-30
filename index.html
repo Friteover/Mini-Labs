@@ -1,327 +1,365 @@
-
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Labs — V0.A</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-.app { padding: 1.5rem 0; }
-.header { margin-bottom: 1.2rem; }
-.title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
-.subtitle { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
-.tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1.2rem; }
-.tab { padding: 6px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; font-size: 12px; cursor: pointer; color: var(--color-text-secondary); transition: all 0.15s; }
-.tab:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
-.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
-.panel { display: none; }
-.panel.active { display: block; }
-.sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.controls { display: flex; flex-direction: column; gap: 10px; }
-.control-row { display: flex; align-items: center; gap: 8px; }
-.control-label { font-size: 12px; color: var(--color-text-secondary); min-width: 110px; }
-.control-val { font-size: 12px; font-weight: 500; min-width: 44px; text-align: right; color: var(--color-text-primary); }
-canvas { border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); display: block; background: transparent; }
-.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
-.metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; }
-.metric-label { font-size: 10px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
-.metric-value { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px; }
-.btn-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-button.sb { padding: 7px 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; cursor: pointer; font-size: 12px; color: var(--color-text-primary); }
-button.sb:hover { background: var(--color-background-secondary); }
-button.sb.primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
-.info-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 9px 12px; margin-top: 10px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
-.formula { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-primary); padding: 3px 8px; border-radius: 5px; display: inline-block; margin: 2px 0; color: var(--color-text-primary); border: 0.5px solid var(--color-border-tertiary); }
-input[type=range] { flex: 1; }
-.tab-group { font-size: 10px; color: var(--color-text-secondary); padding: 4px 6px; align-self: center; }
+  :root {
+    --color-text-primary: #111;
+    --color-text-secondary: #555;
+    --color-background-primary: #fff;
+    --color-background-secondary: #f4f4f5;
+    --color-border-primary: #bbb;
+    --color-border-secondary: #ddd;
+    --color-border-tertiary: #e5e5e5;
+    --border-radius-md: 8px;
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-text-primary: #f0f0f0;
+      --color-text-secondary: #999;
+      --color-background-primary: #111;
+      --color-background-secondary: #1e1e1e;
+      --color-border-primary: #444;
+      --color-border-secondary: #333;
+      --color-border-tertiary: #2a2a2a;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    padding: 0 1rem;
+  }
+  .app { padding: 1.5rem 0; max-width: 780px; margin: 0 auto; }
+  .header { margin-bottom: 1.2rem; }
+  .title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .subtitle { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+  .tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1.2rem; align-items: center; }
+  .tab { padding: 6px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; font-size: 12px; cursor: pointer; color: var(--color-text-secondary); transition: all 0.15s; font-family: var(--font-sans); }
+  .tab:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 580px) { .sim-grid { grid-template-columns: 1fr; } }
+  .controls { display: flex; flex-direction: column; gap: 10px; }
+  .control-row { display: flex; align-items: center; gap: 8px; }
+  .control-label { font-size: 12px; color: var(--color-text-secondary); min-width: 110px; }
+  .control-val { font-size: 12px; font-weight: 500; min-width: 44px; text-align: right; color: var(--color-text-primary); }
+  canvas { border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); display: block; background: transparent; width: 100%; max-width: 300px; }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; }
+  .metric-label { font-size: 10px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .metric-value { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px; }
+  .btn-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  button.sb { padding: 7px 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; cursor: pointer; font-size: 12px; color: var(--color-text-primary); font-family: var(--font-sans); }
+  button.sb:hover { background: var(--color-background-secondary); }
+  button.sb.primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+  .info-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 9px 12px; margin-top: 10px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+  .formula { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-primary); padding: 3px 8px; border-radius: 5px; display: inline-block; margin: 2px 0; color: var(--color-text-primary); border: 0.5px solid var(--color-border-tertiary); }
+  input[type=range] { flex: 1; accent-color: var(--color-text-primary); }
+  .tab-group { font-size: 10px; color: var(--color-text-secondary); padding: 4px 6px; align-self: center; }
 </style>
+</head>
+<body>
 
 <div class="app">
-<div class="header">
-  <div class="title">Mini Labs</div>
-  <div class="subtitle">V0.A</div>
-</div>
-
-<div class="tabs">
-  <span class="tab-group">Physique:</span>
-  <button class="tab active" onclick="switchTab('pendule')">Pendule</button>
-  <button class="tab" onclick="switchTab('projectile')">Projectile</button>
-  <button class="tab" onclick="switchTab('onde')">Ondes</button>
-  <button class="tab" onclick="switchTab('orbite')">Orbites</button>
-  <button class="tab" onclick="switchTab('ressort')">Ressort</button>
-  <span class="tab-group">Chimie/Bio:</span>
-  <button class="tab" onclick="switchTab('gaz')">Gaz idéal</button>
-  <button class="tab" onclick="switchTab('reaction')">Réaction</button>
-  <button class="tab" onclick="switchTab('adn')">ADN</button>
-  <span class="tab-group">Autre:</span>
-  <button class="tab" onclick="switchTab('circuit')">Circuit RC</button>
-  <button class="tab" onclick="switchTab('chaos')">Chaos</button>
-</div>
-
-<!-- PENDULE -->
-<div class="panel active" id="panel-pendule">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-pendule" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="togglePendule()">▶ Lancer</button>
-        <button class="sb" onclick="resetPendule()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Longueur (m)</span><input type="range" min="0.2" max="2" step="0.1" value="1" id="p-len" oninput="updP()"><span class="control-val" id="p-len-v">1.0</span></div>
-        <div class="control-row"><span class="control-label">Angle initial (°)</span><input type="range" min="5" max="80" step="1" value="30" id="p-ang" oninput="updP()"><span class="control-val" id="p-ang-v">30</span></div>
-        <div class="control-row"><span class="control-label">Amortissement</span><input type="range" min="0" max="0.5" step="0.01" value="0.05" id="p-damp" oninput="updP()"><span class="control-val" id="p-damp-v">0.05</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Période (s)</div><div class="metric-value" id="p-T">2.00</div></div>
-        <div class="metric"><div class="metric-label">Fréquence (Hz)</div><div class="metric-value" id="p-F">0.50</div></div>
-        <div class="metric"><div class="metric-label">Angle (°)</div><div class="metric-value" id="p-cur">30.0</div></div>
-        <div class="metric"><div class="metric-label">Vmax (m/s)</div><div class="metric-value" id="p-vm">1.82</div></div>
-      </div>
-      <div class="info-box"><span class="formula">T = 2π√(L/g)</span> — g = 9.81 m/s²</div>
-    </div>
+  <div class="header">
+    <div class="title">Mini Labs</div>
+    <div class="subtitle">V0.A</div>
   </div>
-</div>
 
-<!-- PROJECTILE -->
-<div class="panel" id="panel-projectile">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-proj" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="launchProj()">▶ Lancer</button>
-        <button class="sb" onclick="resetProj()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Vitesse (m/s)</span><input type="range" min="10" max="100" step="1" value="40" id="pr-v" oninput="updPr()"><span class="control-val" id="pr-v-v">40</span></div>
-        <div class="control-row"><span class="control-label">Angle (°)</span><input type="range" min="5" max="85" step="1" value="45" id="pr-a" oninput="updPr()"><span class="control-val" id="pr-a-v">45</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Portée (m)</div><div class="metric-value" id="pr-R">163</div></div>
-        <div class="metric"><div class="metric-label">Hmax (m)</div><div class="metric-value" id="pr-H">40.8</div></div>
-        <div class="metric"><div class="metric-label">Durée (s)</div><div class="metric-value" id="pr-t">5.77</div></div>
-        <div class="metric"><div class="metric-label">Vx (m/s)</div><div class="metric-value" id="pr-vx">28.3</div></div>
-      </div>
-      <div class="info-box"><span class="formula">x=v₀cos(θ)t</span> <span class="formula">y=v₀sin(θ)t−½gt²</span></div>
-    </div>
+  <div class="tabs">
+    <span class="tab-group">Physique :</span>
+    <button class="tab active" onclick="switchTab('pendule')">Pendule</button>
+    <button class="tab" onclick="switchTab('projectile')">Projectile</button>
+    <button class="tab" onclick="switchTab('onde')">Ondes</button>
+    <button class="tab" onclick="switchTab('orbite')">Orbites</button>
+    <button class="tab" onclick="switchTab('ressort')">Ressort</button>
+    <span class="tab-group">Chimie/Bio :</span>
+    <button class="tab" onclick="switchTab('gaz')">Gaz idéal</button>
+    <button class="tab" onclick="switchTab('reaction')">Réaction</button>
+    <button class="tab" onclick="switchTab('adn')">ADN</button>
+    <span class="tab-group">Autre :</span>
+    <button class="tab" onclick="switchTab('circuit')">Circuit RC</button>
+    <button class="tab" onclick="switchTab('chaos')">Chaos</button>
   </div>
-</div>
 
-<!-- ONDES -->
-<div class="panel" id="panel-onde">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-onde" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleOnde()">▶ Animer</button>
-        <button class="sb" onclick="addWave()">+ Onde</button>
-        <button class="sb" onclick="clearWaves()">⊘ Effacer</button>
+  <!-- PENDULE -->
+  <div class="panel active" id="panel-pendule">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-pendule" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="togglePendule()">▶ Lancer</button>
+          <button class="sb" onclick="resetPendule()">↺ Reset</button>
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Amplitude</span><input type="range" min="5" max="60" step="1" value="30" id="o-amp" oninput="updO()"><span class="control-val" id="o-amp-v">30</span></div>
-        <div class="control-row"><span class="control-label">Fréquence (Hz)</span><input type="range" min="0.5" max="5" step="0.1" value="1" id="o-freq" oninput="updO()"><span class="control-val" id="o-freq-v">1.0</span></div>
-        <div class="control-row"><span class="control-label">Phase (°)</span><input type="range" min="0" max="360" step="1" value="0" id="o-phase" oninput="updO()"><span class="control-val" id="o-phase-v">0</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Ondes actives</div><div class="metric-value" id="o-count">1</div></div>
-        <div class="metric"><div class="metric-label">Mode</div><div class="metric-value" id="o-mode">Simple</div></div>
-      </div>
-      <div class="info-box"><span class="formula">y = Σ Aᵢ·sin(2πfᵢt + φᵢ)</span><br>Superposition d'ondes → interférences</div>
-    </div>
-  </div>
-</div>
-
-<!-- ORBITES -->
-<div class="panel" id="panel-orbite">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-orb" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleOrb()">▶ Lancer</button>
-        <button class="sb" onclick="resetOrb()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Masse étoile</span><input type="range" min="0.5" max="5" step="0.1" value="2" id="ob-m" oninput="updOrb()"><span class="control-val" id="ob-m-v">2.0</span></div>
-        <div class="control-row"><span class="control-label">Distance (UA)</span><input type="range" min="0.3" max="3" step="0.1" value="1" id="ob-d" oninput="updOrb()"><span class="control-val" id="ob-d-v">1.0</span></div>
-        <div class="control-row"><span class="control-label">Excentricité</span><input type="range" min="0" max="0.9" step="0.05" value="0.1" id="ob-e" oninput="updOrb()"><span class="control-val" id="ob-e-v">0.10</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Période (ans)</div><div class="metric-value" id="ob-T">0.71</div></div>
-        <div class="metric"><div class="metric-label">V orb. (km/s)</div><div class="metric-value" id="ob-V">42.1</div></div>
-      </div>
-      <div class="info-box"><span class="formula">T² ∝ a³/M</span> — 3e loi de Kepler<br><span class="formula">F = GMm/r²</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- RESSORT (nouveau) -->
-<div class="panel" id="panel-ressort">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-ressort" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleRessort()">▶ Lancer</button>
-        <button class="sb" onclick="resetRessort()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Raideur k (N/m)</span><input type="range" min="1" max="50" step="1" value="10" id="rs-k" oninput="updRs()"><span class="control-val" id="rs-k-v">10</span></div>
-        <div class="control-row"><span class="control-label">Masse (kg)</span><input type="range" min="0.1" max="5" step="0.1" value="1" id="rs-m" oninput="updRs()"><span class="control-val" id="rs-m-v">1.0</span></div>
-        <div class="control-row"><span class="control-label">Étirement (m)</span><input type="range" min="0.1" max="1.5" step="0.05" value="0.5" id="rs-x0" oninput="updRs()"><span class="control-val" id="rs-x0-v">0.50</span></div>
-        <div class="control-row"><span class="control-label">Amortissement</span><input type="range" min="0" max="2" step="0.05" value="0.2" id="rs-b" oninput="updRs()"><span class="control-val" id="rs-b-v">0.20</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Période (s)</div><div class="metric-value" id="rs-T">1.99</div></div>
-        <div class="metric"><div class="metric-label">Fréquence (Hz)</div><div class="metric-value" id="rs-F">0.50</div></div>
-        <div class="metric"><div class="metric-label">Position (m)</div><div class="metric-value" id="rs-pos">0.50</div></div>
-        <div class="metric"><div class="metric-label">Force (N)</div><div class="metric-value" id="rs-F2">5.00</div></div>
-      </div>
-      <div class="info-box"><span class="formula">F = −kx</span> — Loi de Hooke<br><span class="formula">T = 2π√(m/k)</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- GAZ -->
-<div class="panel" id="panel-gaz">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-gaz" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleGaz()">▶ Simuler</button>
-        <button class="sb" onclick="resetGaz()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Température (K)</span><input type="range" min="100" max="1000" step="10" value="300" id="g-T" oninput="updG()"><span class="control-val" id="g-T-v">300</span></div>
-        <div class="control-row"><span class="control-label">Nb particules</span><input type="range" min="5" max="40" step="1" value="15" id="g-N" oninput="updG()"><span class="control-val" id="g-N-v">15</span></div>
-        <div class="control-row"><span class="control-label">Volume (L)</span><input type="range" min="1" max="10" step="0.5" value="5" id="g-V" oninput="updG()"><span class="control-val" id="g-V-v">5.0</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Pression (kPa)</div><div class="metric-value" id="g-P">748</div></div>
-        <div class="metric"><div class="metric-label">Vit. moy. (m/s)</div><div class="metric-value" id="g-Vm">482</div></div>
-      </div>
-      <div class="info-box"><span class="formula">PV = nRT</span> — R = 8.314 J/(mol·K)</div>
-    </div>
-  </div>
-</div>
-
-<!-- REACTION CHIMIQUE (nouveau) -->
-<div class="panel" id="panel-reaction">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-rxn" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleRxn()">▶ Réagir</button>
-        <button class="sb" onclick="resetRxn()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Concentration A</span><input type="range" min="0.1" max="2" step="0.1" value="1" id="rx-A" oninput="updRxn()"><span class="control-val" id="rx-A-v">1.0</span></div>
-        <div class="control-row"><span class="control-label">Constante k₁</span><input type="range" min="0.01" max="1" step="0.01" value="0.3" id="rx-k1" oninput="updRxn()"><span class="control-val" id="rx-k1-v">0.30</span></div>
-        <div class="control-row"><span class="control-label">Constante k₂ (ret.)</span><input type="range" min="0" max="0.5" step="0.01" value="0.05" id="rx-k2" oninput="updRxn()"><span class="control-val" id="rx-k2-v">0.05</span></div>
-        <div class="control-row"><span class="control-label">Température (K)</span><input type="range" min="200" max="800" step="10" value="300" id="rx-T" oninput="updRxn()"><span class="control-val" id="rx-T-v">300</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">[A] finale</div><div class="metric-value" id="rx-Af">0.14</div></div>
-        <div class="metric"><div class="metric-label">[B] finale</div><div class="metric-value" id="rx-Bf">0.86</div></div>
-        <div class="metric"><div class="metric-label">Équilibre (s)</div><div class="metric-value" id="rx-teq">8.2</div></div>
-        <div class="metric"><div class="metric-label">Taux conv. (%)</div><div class="metric-value" id="rx-conv">86</div></div>
-      </div>
-      <div class="info-box"><span class="formula">A ⇌ B</span><br>Cinétique : <span class="formula">d[A]/dt = −k₁[A] + k₂[B]</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- ADN (nouveau) -->
-<div class="panel" id="panel-adn">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-adn" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleAdn()">▶ Tourner</button>
-        <button class="sb" onclick="mutateAdn()">⚡ Muter</button>
-        <button class="sb" onclick="resetAdn()">↺ Reset</button>
-      </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Vitesse rotation</span><input type="range" min="0.1" max="3" step="0.1" value="1" id="adn-spd" oninput="updAdn()"><span class="control-val" id="adn-spd-v">1.0</span></div>
-        <div class="control-row"><span class="control-label">Nb paires de bases</span><input type="range" min="5" max="20" step="1" value="12" id="adn-n" oninput="updAdn()"><span class="control-val" id="adn-n-v">12</span></div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Paires AT</div><div class="metric-value" id="adn-at">5</div></div>
-        <div class="metric"><div class="metric-label">Paires GC</div><div class="metric-value" id="adn-gc">7</div></div>
-        <div class="metric"><div class="metric-label">Mutations</div><div class="metric-value" id="adn-mut">0</div></div>
-        <div class="metric"><div class="metric-label">Stabilité (%)</div><div class="metric-value" id="adn-stab">100</div></div>
-      </div>
-      <div class="info-box">
-        Bases : <span class="formula">A-T</span> (2 liaisons H) <span class="formula">G-C</span> (3 liaisons H)<br>
-        Double hélice — modèle Watson-Crick
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Longueur (m)</span><input type="range" min="0.2" max="2" step="0.1" value="1" id="p-len" oninput="updP()"><span class="control-val" id="p-len-v">1.0</span></div>
+          <div class="control-row"><span class="control-label">Angle initial (°)</span><input type="range" min="5" max="80" step="1" value="30" id="p-ang" oninput="updP()"><span class="control-val" id="p-ang-v">30</span></div>
+          <div class="control-row"><span class="control-label">Amortissement</span><input type="range" min="0" max="0.5" step="0.01" value="0.05" id="p-damp" oninput="updP()"><span class="control-val" id="p-damp-v">0.05</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Période (s)</div><div class="metric-value" id="p-T">2.00</div></div>
+          <div class="metric"><div class="metric-label">Fréquence (Hz)</div><div class="metric-value" id="p-F">0.50</div></div>
+          <div class="metric"><div class="metric-label">Angle (°)</div><div class="metric-value" id="p-cur">30.0</div></div>
+          <div class="metric"><div class="metric-label">Vmax (m/s)</div><div class="metric-value" id="p-vm">1.82</div></div>
+        </div>
+        <div class="info-box"><span class="formula">T = 2π√(L/g)</span> — g = 9.81 m/s²</div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- CIRCUIT RC (nouveau) -->
-<div class="panel" id="panel-circuit">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-rc" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleRC()">▶ Charger</button>
-        <button class="sb" onclick="dischargeRC()">⚡ Décharger</button>
-        <button class="sb" onclick="resetRC()">↺ Reset</button>
+  <!-- PROJECTILE -->
+  <div class="panel" id="panel-projectile">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-proj" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="launchProj()">▶ Lancer</button>
+          <button class="sb" onclick="resetProj()">↺ Reset</button>
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">Résistance (kΩ)</span><input type="range" min="1" max="100" step="1" value="10" id="rc-R" oninput="updRC()"><span class="control-val" id="rc-R-v">10</span></div>
-        <div class="control-row"><span class="control-label">Capacité (μF)</span><input type="range" min="1" max="100" step="1" value="10" id="rc-C" oninput="updRC()"><span class="control-val" id="rc-C-v">10</span></div>
-        <div class="control-row"><span class="control-label">Tension (V)</span><input type="range" min="1" max="12" step="0.5" value="5" id="rc-V" oninput="updRC()"><span class="control-val" id="rc-V-v">5.0</span></div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Vitesse (m/s)</span><input type="range" min="10" max="100" step="1" value="40" id="pr-v" oninput="updPr()"><span class="control-val" id="pr-v-v">40</span></div>
+          <div class="control-row"><span class="control-label">Angle (°)</span><input type="range" min="5" max="85" step="1" value="45" id="pr-a" oninput="updPr()"><span class="control-val" id="pr-a-v">45</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Portée (m)</div><div class="metric-value" id="pr-R">163</div></div>
+          <div class="metric"><div class="metric-label">Hmax (m)</div><div class="metric-value" id="pr-H">40.8</div></div>
+          <div class="metric"><div class="metric-label">Durée (s)</div><div class="metric-value" id="pr-t">5.77</div></div>
+          <div class="metric"><div class="metric-label">Vx (m/s)</div><div class="metric-value" id="pr-vx">28.3</div></div>
+        </div>
+        <div class="info-box"><span class="formula">x = v₀cos(θ)t</span> <span class="formula">y = v₀sin(θ)t − ½gt²</span></div>
       </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">τ = RC (ms)</div><div class="metric-value" id="rc-tau">100</div></div>
-        <div class="metric"><div class="metric-label">Vc actuelle (V)</div><div class="metric-value" id="rc-vc">0.00</div></div>
-        <div class="metric"><div class="metric-label">I actuelle (mA)</div><div class="metric-value" id="rc-ic">0.50</div></div>
-        <div class="metric"><div class="metric-label">Chargé à (%)</div><div class="metric-value" id="rc-pct">0</div></div>
-      </div>
-      <div class="info-box"><span class="formula">Vc(t) = V₀(1−e^(−t/τ))</span><br><span class="formula">τ = RC</span></div>
     </div>
   </div>
-</div>
 
-<!-- CHAOS (nouveau) - Double pendule -->
-<div class="panel" id="panel-chaos">
-  <div class="sim-grid">
-    <div>
-      <canvas id="c-chaos" width="300" height="260"></canvas>
-      <div class="btn-row">
-        <button class="sb primary" onclick="toggleChaos()">▶ Lancer</button>
-        <button class="sb" onclick="resetChaos()">↺ Reset</button>
-        <button class="sb" onclick="addChaos()">+ Clone</button>
+  <!-- ONDES -->
+  <div class="panel" id="panel-onde">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-onde" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleOnde()">▶ Animer</button>
+          <button class="sb" onclick="addWave()">+ Onde</button>
+          <button class="sb" onclick="clearWaves()">⊘ Effacer</button>
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="controls">
-        <div class="control-row"><span class="control-label">L1 (m)</span><input type="range" min="0.3" max="1.5" step="0.1" value="0.8" id="ch-l1" oninput="updChaos()"><span class="control-val" id="ch-l1-v">0.8</span></div>
-        <div class="control-row"><span class="control-label">L2 (m)</span><input type="range" min="0.3" max="1.5" step="0.1" value="0.8" id="ch-l2" oninput="updChaos()"><span class="control-val" id="ch-l2-v">0.8</span></div>
-        <div class="control-row"><span class="control-label">Angle θ1 (°)</span><input type="range" min="10" max="170" step="1" value="120" id="ch-a1" oninput="updChaos()"><span class="control-val" id="ch-a1-v">120</span></div>
-        <div class="control-row"><span class="control-label">Angle θ2 (°)</span><input type="range" min="10" max="170" step="1" value="60" id="ch-a2" oninput="updChaos()"><span class="control-val" id="ch-a2-v">60</span></div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Amplitude</span><input type="range" min="5" max="60" step="1" value="30" id="o-amp" oninput="updO()"><span class="control-val" id="o-amp-v">30</span></div>
+          <div class="control-row"><span class="control-label">Fréquence (Hz)</span><input type="range" min="0.5" max="5" step="0.1" value="1" id="o-freq" oninput="updO()"><span class="control-val" id="o-freq-v">1.0</span></div>
+          <div class="control-row"><span class="control-label">Phase (°)</span><input type="range" min="0" max="360" step="1" value="0" id="o-phase" oninput="updO()"><span class="control-val" id="o-phase-v">0</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Ondes actives</div><div class="metric-value" id="o-count">1</div></div>
+          <div class="metric"><div class="metric-label">Mode</div><div class="metric-value" id="o-mode">Simple</div></div>
+        </div>
+        <div class="info-box"><span class="formula">y = Σ Aᵢ·sin(2πfᵢt + φᵢ)</span><br>Superposition d'ondes → interférences</div>
       </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-label">Pendules actifs</div><div class="metric-value" id="ch-nb">1</div></div>
-        <div class="metric"><div class="metric-label">Énergie totale</div><div class="metric-value" id="ch-en">—</div></div>
-      </div>
-      <div class="info-box">Le double pendule est un système <strong>chaotique</strong> : de minimes différences initiales divergent exponentiellement (effet papillon).</div>
     </div>
   </div>
-</div>
+
+  <!-- ORBITES -->
+  <div class="panel" id="panel-orbite">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-orb" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleOrb()">▶ Lancer</button>
+          <button class="sb" onclick="resetOrb()">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Masse étoile</span><input type="range" min="0.5" max="5" step="0.1" value="2" id="ob-m" oninput="updOrb()"><span class="control-val" id="ob-m-v">2.0</span></div>
+          <div class="control-row"><span class="control-label">Distance (UA)</span><input type="range" min="0.3" max="3" step="0.1" value="1" id="ob-d" oninput="updOrb()"><span class="control-val" id="ob-d-v">1.0</span></div>
+          <div class="control-row"><span class="control-label">Excentricité</span><input type="range" min="0" max="0.9" step="0.05" value="0.1" id="ob-e" oninput="updOrb()"><span class="control-val" id="ob-e-v">0.10</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Période (ans)</div><div class="metric-value" id="ob-T">0.71</div></div>
+          <div class="metric"><div class="metric-label">V orb. (km/s)</div><div class="metric-value" id="ob-V">42.1</div></div>
+        </div>
+        <div class="info-box"><span class="formula">T² ∝ a³/M</span> — 3e loi de Kepler<br><span class="formula">F = GMm/r²</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESSORT -->
+  <div class="panel" id="panel-ressort">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-ressort" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleRessort()">▶ Lancer</button>
+          <button class="sb" onclick="resetRessort()">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Raideur k (N/m)</span><input type="range" min="1" max="50" step="1" value="10" id="rs-k" oninput="updRs()"><span class="control-val" id="rs-k-v">10</span></div>
+          <div class="control-row"><span class="control-label">Masse (kg)</span><input type="range" min="0.1" max="5" step="0.1" value="1" id="rs-m" oninput="updRs()"><span class="control-val" id="rs-m-v">1.0</span></div>
+          <div class="control-row"><span class="control-label">Étirement (m)</span><input type="range" min="0.1" max="1.5" step="0.05" value="0.5" id="rs-x0" oninput="updRs()"><span class="control-val" id="rs-x0-v">0.50</span></div>
+          <div class="control-row"><span class="control-label">Amortissement</span><input type="range" min="0" max="2" step="0.05" value="0.2" id="rs-b" oninput="updRs()"><span class="control-val" id="rs-b-v">0.20</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Période (s)</div><div class="metric-value" id="rs-T">1.99</div></div>
+          <div class="metric"><div class="metric-label">Fréquence (Hz)</div><div class="metric-value" id="rs-F">0.50</div></div>
+          <div class="metric"><div class="metric-label">Position (m)</div><div class="metric-value" id="rs-pos">0.50</div></div>
+          <div class="metric"><div class="metric-label">Force (N)</div><div class="metric-value" id="rs-F2">5.00</div></div>
+        </div>
+        <div class="info-box"><span class="formula">F = −kx</span> — Loi de Hooke<br><span class="formula">T = 2π√(m/k)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAZ -->
+  <div class="panel" id="panel-gaz">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-gaz" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleGaz()">▶ Simuler</button>
+          <button class="sb" onclick="resetGaz()">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Température (K)</span><input type="range" min="100" max="1000" step="10" value="300" id="g-T" oninput="updG()"><span class="control-val" id="g-T-v">300</span></div>
+          <div class="control-row"><span class="control-label">Nb particules</span><input type="range" min="5" max="40" step="1" value="15" id="g-N" oninput="updG()"><span class="control-val" id="g-N-v">15</span></div>
+          <div class="control-row"><span class="control-label">Volume (L)</span><input type="range" min="1" max="10" step="0.5" value="5" id="g-V" oninput="updG()"><span class="control-val" id="g-V-v">5.0</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Pression (kPa)</div><div class="metric-value" id="g-P">748</div></div>
+          <div class="metric"><div class="metric-label">Vit. moy. (m/s)</div><div class="metric-value" id="g-Vm">482</div></div>
+        </div>
+        <div class="info-box"><span class="formula">PV = nRT</span> — R = 8.314 J/(mol·K)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RÉACTION CHIMIQUE -->
+  <div class="panel" id="panel-reaction">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-rxn" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleRxn()">▶ Réagir</button>
+          <button class="sb" onclick="resetRxn()">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Concentration A</span><input type="range" min="0.1" max="2" step="0.1" value="1" id="rx-A" oninput="updRxn()"><span class="control-val" id="rx-A-v">1.0</span></div>
+          <div class="control-row"><span class="control-label">Constante k₁</span><input type="range" min="0.01" max="1" step="0.01" value="0.3" id="rx-k1" oninput="updRxn()"><span class="control-val" id="rx-k1-v">0.30</span></div>
+          <div class="control-row"><span class="control-label">Constante k₂ (ret.)</span><input type="range" min="0" max="0.5" step="0.01" value="0.05" id="rx-k2" oninput="updRxn()"><span class="control-val" id="rx-k2-v">0.05</span></div>
+          <div class="control-row"><span class="control-label">Température (K)</span><input type="range" min="200" max="800" step="10" value="300" id="rx-T" oninput="updRxn()"><span class="control-val" id="rx-T-v">300</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">[A] finale</div><div class="metric-value" id="rx-Af">0.14</div></div>
+          <div class="metric"><div class="metric-label">[B] finale</div><div class="metric-value" id="rx-Bf">0.86</div></div>
+          <div class="metric"><div class="metric-label">Équilibre (s)</div><div class="metric-value" id="rx-teq">8.2</div></div>
+          <div class="metric"><div class="metric-label">Taux conv. (%)</div><div class="metric-value" id="rx-conv">86</div></div>
+        </div>
+        <div class="info-box"><span class="formula">A ⇌ B</span><br>Cinétique : <span class="formula">d[A]/dt = −k₁[A] + k₂[B]</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADN -->
+  <div class="panel" id="panel-adn">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-adn" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleAdn()">▶ Tourner</button>
+          <button class="sb" onclick="mutateAdn()">⚡ Muter</button>
+          <button class="sb" onclick="resetAdn()">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Vitesse rotation</span><input type="range" min="0.1" max="3" step="0.1" value="1" id="adn-spd" oninput="updAdn()"><span class="control-val" id="adn-spd-v">1.0</span></div>
+          <div class="control-row"><span class="control-label">Nb paires de bases</span><input type="range" min="5" max="20" step="1" value="12" id="adn-n" oninput="updAdn()"><span class="control-val" id="adn-n-v">12</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Paires AT</div><div class="metric-value" id="adn-at">5</div></div>
+          <div class="metric"><div class="metric-label">Paires GC</div><div class="metric-value" id="adn-gc">7</div></div>
+          <div class="metric"><div class="metric-label">Mutations</div><div class="metric-value" id="adn-mut">0</div></div>
+          <div class="metric"><div class="metric-label">Stabilité (%)</div><div class="metric-value" id="adn-stab">100</div></div>
+        </div>
+        <div class="info-box">
+          Bases : <span class="formula">A-T</span> (2 liaisons H) <span class="formula">G-C</span> (3 liaisons H)<br>
+          Double hélice — modèle Watson-Crick
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CIRCUIT RC -->
+  <div class="panel" id="panel-circuit">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-rc" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleRC()">▶ Charger</button>
+          <button class="sb" onclick="dischargeRC()">⚡ Décharger</button>
+          <button class="sb" onclick="resetRC()">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">Résistance (kΩ)</span><input type="range" min="1" max="100" step="1" value="10" id="rc-R" oninput="updRC()"><span class="control-val" id="rc-R-v">10</span></div>
+          <div class="control-row"><span class="control-label">Capacité (μF)</span><input type="range" min="1" max="100" step="1" value="10" id="rc-C" oninput="updRC()"><span class="control-val" id="rc-C-v">10</span></div>
+          <div class="control-row"><span class="control-label">Tension (V)</span><input type="range" min="1" max="12" step="0.5" value="5" id="rc-V" oninput="updRC()"><span class="control-val" id="rc-V-v">5.0</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">τ = RC (ms)</div><div class="metric-value" id="rc-tau">100</div></div>
+          <div class="metric"><div class="metric-label">Vc actuelle (V)</div><div class="metric-value" id="rc-vc">0.00</div></div>
+          <div class="metric"><div class="metric-label">I actuelle (mA)</div><div class="metric-value" id="rc-ic">0.50</div></div>
+          <div class="metric"><div class="metric-label">Chargé à (%)</div><div class="metric-value" id="rc-pct">0</div></div>
+        </div>
+        <div class="info-box"><span class="formula">Vc(t) = V₀(1−e^(−t/τ))</span><br><span class="formula">τ = RC</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAOS — Double pendule -->
+  <div class="panel" id="panel-chaos">
+    <div class="sim-grid">
+      <div>
+        <canvas id="c-chaos" width="300" height="260"></canvas>
+        <div class="btn-row">
+          <button class="sb primary" onclick="toggleChaos()">▶ Lancer</button>
+          <button class="sb" onclick="resetChaos()">↺ Reset</button>
+          <button class="sb" onclick="addChaos()">+ Clone</button>
+        </div>
+      </div>
+      <div>
+        <div class="controls">
+          <div class="control-row"><span class="control-label">L1 (m)</span><input type="range" min="0.3" max="1.5" step="0.1" value="0.8" id="ch-l1" oninput="updChaos()"><span class="control-val" id="ch-l1-v">0.8</span></div>
+          <div class="control-row"><span class="control-label">L2 (m)</span><input type="range" min="0.3" max="1.5" step="0.1" value="0.8" id="ch-l2" oninput="updChaos()"><span class="control-val" id="ch-l2-v">0.8</span></div>
+          <div class="control-row"><span class="control-label">Angle θ1 (°)</span><input type="range" min="10" max="170" step="1" value="120" id="ch-a1" oninput="updChaos()"><span class="control-val" id="ch-a1-v">120</span></div>
+          <div class="control-row"><span class="control-label">Angle θ2 (°)</span><input type="range" min="10" max="170" step="1" value="60" id="ch-a2" oninput="updChaos()"><span class="control-val" id="ch-a2-v">60</span></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Pendules actifs</div><div class="metric-value" id="ch-nb">1</div></div>
+          <div class="metric"><div class="metric-label">Énergie totale</div><div class="metric-value" id="ch-en">—</div></div>
+        </div>
+        <div class="info-box">Le double pendule est un système <strong>chaotique</strong> : de minimes différences initiales divergent exponentiellement (effet papillon).</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -492,7 +530,6 @@ function drawRessort(){
   for(let i=0;i<=coils;i++){const y=anchorY+i*(massY-anchorY-20)/coils;const x=cx+(i%2===0?-coilW:coilW);ctx.lineTo(x,y);}
   ctx.lineTo(cx,massY);ctx.stroke();
   ctx.fillStyle=isDark()?'#9FE1CB':'#0F6E56';ctx.fillRect(cx-18,massY,36,24);
-  const ratio=(rsX/Math.max(maxX,0.01)+1)/2;
   ctx.strokeStyle=isDark()?'#555':'#ddd';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,anchorY);ctx.lineTo(280,anchorY);ctx.stroke();
   if(rsHistory.length>1){ctx.strokeStyle=isDark()?'#B5D4F4':'#185FA5';ctx.lineWidth=1.5;ctx.beginPath();
     for(let i=0;i<rsHistory.length;i++){const hx=20+i*(260/200),hy=230-rsHistory[i]*scY*0.5;if(i===0)ctx.moveTo(hx,hy);else ctx.lineTo(hx,hy);}ctx.stroke();}
@@ -726,3 +763,5 @@ function toggleChaos(){const b=document.querySelector('#panel-chaos .sb.primary'
 function resetChaos(){chRun=false;cancelAnimationFrame(chAF);document.querySelector('#panel-chaos .sb.primary').textContent='▶ Lancer';initChaos();}
 updChaos();
 </script>
+</body>
+</html>
