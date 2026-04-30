@@ -1,0 +1,728 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.app { padding: 1.5rem 0; }
+.header { margin-bottom: 1.2rem; }
+.title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.subtitle { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+.tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.tab { padding: 6px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; font-size: 12px; cursor: pointer; color: var(--color-text-secondary); transition: all 0.15s; }
+.tab:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+.panel { display: none; }
+.panel.active { display: block; }
+.sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.controls { display: flex; flex-direction: column; gap: 10px; }
+.control-row { display: flex; align-items: center; gap: 8px; }
+.control-label { font-size: 12px; color: var(--color-text-secondary); min-width: 110px; }
+.control-val { font-size: 12px; font-weight: 500; min-width: 44px; text-align: right; color: var(--color-text-primary); }
+canvas { border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); display: block; background: transparent; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+.metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; }
+.metric-label { font-size: 10px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.metric-value { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px; }
+.btn-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+button.sb { padding: 7px 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; cursor: pointer; font-size: 12px; color: var(--color-text-primary); }
+button.sb:hover { background: var(--color-background-secondary); }
+button.sb.primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+.info-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 9px 12px; margin-top: 10px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.formula { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-primary); padding: 3px 8px; border-radius: 5px; display: inline-block; margin: 2px 0; color: var(--color-text-primary); border: 0.5px solid var(--color-border-tertiary); }
+input[type=range] { flex: 1; }
+.tab-group { font-size: 10px; color: var(--color-text-secondary); padding: 4px 6px; align-self: center; }
+</style>
+
+<div class="app">
+<div class="header">
+  <div class="title">Mini Labs</div>
+  <div class="subtitle">V0.A</div>
+</div>
+
+<div class="tabs">
+  <span class="tab-group">Physique:</span>
+  <button class="tab active" onclick="switchTab('pendule')">Pendule</button>
+  <button class="tab" onclick="switchTab('projectile')">Projectile</button>
+  <button class="tab" onclick="switchTab('onde')">Ondes</button>
+  <button class="tab" onclick="switchTab('orbite')">Orbites</button>
+  <button class="tab" onclick="switchTab('ressort')">Ressort</button>
+  <span class="tab-group">Chimie/Bio:</span>
+  <button class="tab" onclick="switchTab('gaz')">Gaz idéal</button>
+  <button class="tab" onclick="switchTab('reaction')">Réaction</button>
+  <button class="tab" onclick="switchTab('adn')">ADN</button>
+  <span class="tab-group">Autre:</span>
+  <button class="tab" onclick="switchTab('circuit')">Circuit RC</button>
+  <button class="tab" onclick="switchTab('chaos')">Chaos</button>
+</div>
+
+<!-- PENDULE -->
+<div class="panel active" id="panel-pendule">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-pendule" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="togglePendule()">▶ Lancer</button>
+        <button class="sb" onclick="resetPendule()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Longueur (m)</span><input type="range" min="0.2" max="2" step="0.1" value="1" id="p-len" oninput="updP()"><span class="control-val" id="p-len-v">1.0</span></div>
+        <div class="control-row"><span class="control-label">Angle initial (°)</span><input type="range" min="5" max="80" step="1" value="30" id="p-ang" oninput="updP()"><span class="control-val" id="p-ang-v">30</span></div>
+        <div class="control-row"><span class="control-label">Amortissement</span><input type="range" min="0" max="0.5" step="0.01" value="0.05" id="p-damp" oninput="updP()"><span class="control-val" id="p-damp-v">0.05</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Période (s)</div><div class="metric-value" id="p-T">2.00</div></div>
+        <div class="metric"><div class="metric-label">Fréquence (Hz)</div><div class="metric-value" id="p-F">0.50</div></div>
+        <div class="metric"><div class="metric-label">Angle (°)</div><div class="metric-value" id="p-cur">30.0</div></div>
+        <div class="metric"><div class="metric-label">Vmax (m/s)</div><div class="metric-value" id="p-vm">1.82</div></div>
+      </div>
+      <div class="info-box"><span class="formula">T = 2π√(L/g)</span> — g = 9.81 m/s²</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTILE -->
+<div class="panel" id="panel-projectile">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-proj" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="launchProj()">▶ Lancer</button>
+        <button class="sb" onclick="resetProj()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Vitesse (m/s)</span><input type="range" min="10" max="100" step="1" value="40" id="pr-v" oninput="updPr()"><span class="control-val" id="pr-v-v">40</span></div>
+        <div class="control-row"><span class="control-label">Angle (°)</span><input type="range" min="5" max="85" step="1" value="45" id="pr-a" oninput="updPr()"><span class="control-val" id="pr-a-v">45</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Portée (m)</div><div class="metric-value" id="pr-R">163</div></div>
+        <div class="metric"><div class="metric-label">Hmax (m)</div><div class="metric-value" id="pr-H">40.8</div></div>
+        <div class="metric"><div class="metric-label">Durée (s)</div><div class="metric-value" id="pr-t">5.77</div></div>
+        <div class="metric"><div class="metric-label">Vx (m/s)</div><div class="metric-value" id="pr-vx">28.3</div></div>
+      </div>
+      <div class="info-box"><span class="formula">x=v₀cos(θ)t</span> <span class="formula">y=v₀sin(θ)t−½gt²</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ONDES -->
+<div class="panel" id="panel-onde">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-onde" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleOnde()">▶ Animer</button>
+        <button class="sb" onclick="addWave()">+ Onde</button>
+        <button class="sb" onclick="clearWaves()">⊘ Effacer</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Amplitude</span><input type="range" min="5" max="60" step="1" value="30" id="o-amp" oninput="updO()"><span class="control-val" id="o-amp-v">30</span></div>
+        <div class="control-row"><span class="control-label">Fréquence (Hz)</span><input type="range" min="0.5" max="5" step="0.1" value="1" id="o-freq" oninput="updO()"><span class="control-val" id="o-freq-v">1.0</span></div>
+        <div class="control-row"><span class="control-label">Phase (°)</span><input type="range" min="0" max="360" step="1" value="0" id="o-phase" oninput="updO()"><span class="control-val" id="o-phase-v">0</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Ondes actives</div><div class="metric-value" id="o-count">1</div></div>
+        <div class="metric"><div class="metric-label">Mode</div><div class="metric-value" id="o-mode">Simple</div></div>
+      </div>
+      <div class="info-box"><span class="formula">y = Σ Aᵢ·sin(2πfᵢt + φᵢ)</span><br>Superposition d'ondes → interférences</div>
+    </div>
+  </div>
+</div>
+
+<!-- ORBITES -->
+<div class="panel" id="panel-orbite">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-orb" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleOrb()">▶ Lancer</button>
+        <button class="sb" onclick="resetOrb()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Masse étoile</span><input type="range" min="0.5" max="5" step="0.1" value="2" id="ob-m" oninput="updOrb()"><span class="control-val" id="ob-m-v">2.0</span></div>
+        <div class="control-row"><span class="control-label">Distance (UA)</span><input type="range" min="0.3" max="3" step="0.1" value="1" id="ob-d" oninput="updOrb()"><span class="control-val" id="ob-d-v">1.0</span></div>
+        <div class="control-row"><span class="control-label">Excentricité</span><input type="range" min="0" max="0.9" step="0.05" value="0.1" id="ob-e" oninput="updOrb()"><span class="control-val" id="ob-e-v">0.10</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Période (ans)</div><div class="metric-value" id="ob-T">0.71</div></div>
+        <div class="metric"><div class="metric-label">V orb. (km/s)</div><div class="metric-value" id="ob-V">42.1</div></div>
+      </div>
+      <div class="info-box"><span class="formula">T² ∝ a³/M</span> — 3e loi de Kepler<br><span class="formula">F = GMm/r²</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESSORT (nouveau) -->
+<div class="panel" id="panel-ressort">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-ressort" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleRessort()">▶ Lancer</button>
+        <button class="sb" onclick="resetRessort()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Raideur k (N/m)</span><input type="range" min="1" max="50" step="1" value="10" id="rs-k" oninput="updRs()"><span class="control-val" id="rs-k-v">10</span></div>
+        <div class="control-row"><span class="control-label">Masse (kg)</span><input type="range" min="0.1" max="5" step="0.1" value="1" id="rs-m" oninput="updRs()"><span class="control-val" id="rs-m-v">1.0</span></div>
+        <div class="control-row"><span class="control-label">Étirement (m)</span><input type="range" min="0.1" max="1.5" step="0.05" value="0.5" id="rs-x0" oninput="updRs()"><span class="control-val" id="rs-x0-v">0.50</span></div>
+        <div class="control-row"><span class="control-label">Amortissement</span><input type="range" min="0" max="2" step="0.05" value="0.2" id="rs-b" oninput="updRs()"><span class="control-val" id="rs-b-v">0.20</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Période (s)</div><div class="metric-value" id="rs-T">1.99</div></div>
+        <div class="metric"><div class="metric-label">Fréquence (Hz)</div><div class="metric-value" id="rs-F">0.50</div></div>
+        <div class="metric"><div class="metric-label">Position (m)</div><div class="metric-value" id="rs-pos">0.50</div></div>
+        <div class="metric"><div class="metric-label">Force (N)</div><div class="metric-value" id="rs-F2">5.00</div></div>
+      </div>
+      <div class="info-box"><span class="formula">F = −kx</span> — Loi de Hooke<br><span class="formula">T = 2π√(m/k)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- GAZ -->
+<div class="panel" id="panel-gaz">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-gaz" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleGaz()">▶ Simuler</button>
+        <button class="sb" onclick="resetGaz()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Température (K)</span><input type="range" min="100" max="1000" step="10" value="300" id="g-T" oninput="updG()"><span class="control-val" id="g-T-v">300</span></div>
+        <div class="control-row"><span class="control-label">Nb particules</span><input type="range" min="5" max="40" step="1" value="15" id="g-N" oninput="updG()"><span class="control-val" id="g-N-v">15</span></div>
+        <div class="control-row"><span class="control-label">Volume (L)</span><input type="range" min="1" max="10" step="0.5" value="5" id="g-V" oninput="updG()"><span class="control-val" id="g-V-v">5.0</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Pression (kPa)</div><div class="metric-value" id="g-P">748</div></div>
+        <div class="metric"><div class="metric-label">Vit. moy. (m/s)</div><div class="metric-value" id="g-Vm">482</div></div>
+      </div>
+      <div class="info-box"><span class="formula">PV = nRT</span> — R = 8.314 J/(mol·K)</div>
+    </div>
+  </div>
+</div>
+
+<!-- REACTION CHIMIQUE (nouveau) -->
+<div class="panel" id="panel-reaction">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-rxn" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleRxn()">▶ Réagir</button>
+        <button class="sb" onclick="resetRxn()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Concentration A</span><input type="range" min="0.1" max="2" step="0.1" value="1" id="rx-A" oninput="updRxn()"><span class="control-val" id="rx-A-v">1.0</span></div>
+        <div class="control-row"><span class="control-label">Constante k₁</span><input type="range" min="0.01" max="1" step="0.01" value="0.3" id="rx-k1" oninput="updRxn()"><span class="control-val" id="rx-k1-v">0.30</span></div>
+        <div class="control-row"><span class="control-label">Constante k₂ (ret.)</span><input type="range" min="0" max="0.5" step="0.01" value="0.05" id="rx-k2" oninput="updRxn()"><span class="control-val" id="rx-k2-v">0.05</span></div>
+        <div class="control-row"><span class="control-label">Température (K)</span><input type="range" min="200" max="800" step="10" value="300" id="rx-T" oninput="updRxn()"><span class="control-val" id="rx-T-v">300</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">[A] finale</div><div class="metric-value" id="rx-Af">0.14</div></div>
+        <div class="metric"><div class="metric-label">[B] finale</div><div class="metric-value" id="rx-Bf">0.86</div></div>
+        <div class="metric"><div class="metric-label">Équilibre (s)</div><div class="metric-value" id="rx-teq">8.2</div></div>
+        <div class="metric"><div class="metric-label">Taux conv. (%)</div><div class="metric-value" id="rx-conv">86</div></div>
+      </div>
+      <div class="info-box"><span class="formula">A ⇌ B</span><br>Cinétique : <span class="formula">d[A]/dt = −k₁[A] + k₂[B]</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADN (nouveau) -->
+<div class="panel" id="panel-adn">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-adn" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleAdn()">▶ Tourner</button>
+        <button class="sb" onclick="mutateAdn()">⚡ Muter</button>
+        <button class="sb" onclick="resetAdn()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Vitesse rotation</span><input type="range" min="0.1" max="3" step="0.1" value="1" id="adn-spd" oninput="updAdn()"><span class="control-val" id="adn-spd-v">1.0</span></div>
+        <div class="control-row"><span class="control-label">Nb paires de bases</span><input type="range" min="5" max="20" step="1" value="12" id="adn-n" oninput="updAdn()"><span class="control-val" id="adn-n-v">12</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Paires AT</div><div class="metric-value" id="adn-at">5</div></div>
+        <div class="metric"><div class="metric-label">Paires GC</div><div class="metric-value" id="adn-gc">7</div></div>
+        <div class="metric"><div class="metric-label">Mutations</div><div class="metric-value" id="adn-mut">0</div></div>
+        <div class="metric"><div class="metric-label">Stabilité (%)</div><div class="metric-value" id="adn-stab">100</div></div>
+      </div>
+      <div class="info-box">
+        Bases : <span class="formula">A-T</span> (2 liaisons H) <span class="formula">G-C</span> (3 liaisons H)<br>
+        Double hélice — modèle Watson-Crick
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CIRCUIT RC (nouveau) -->
+<div class="panel" id="panel-circuit">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-rc" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleRC()">▶ Charger</button>
+        <button class="sb" onclick="dischargeRC()">⚡ Décharger</button>
+        <button class="sb" onclick="resetRC()">↺ Reset</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">Résistance (kΩ)</span><input type="range" min="1" max="100" step="1" value="10" id="rc-R" oninput="updRC()"><span class="control-val" id="rc-R-v">10</span></div>
+        <div class="control-row"><span class="control-label">Capacité (μF)</span><input type="range" min="1" max="100" step="1" value="10" id="rc-C" oninput="updRC()"><span class="control-val" id="rc-C-v">10</span></div>
+        <div class="control-row"><span class="control-label">Tension (V)</span><input type="range" min="1" max="12" step="0.5" value="5" id="rc-V" oninput="updRC()"><span class="control-val" id="rc-V-v">5.0</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">τ = RC (ms)</div><div class="metric-value" id="rc-tau">100</div></div>
+        <div class="metric"><div class="metric-label">Vc actuelle (V)</div><div class="metric-value" id="rc-vc">0.00</div></div>
+        <div class="metric"><div class="metric-label">I actuelle (mA)</div><div class="metric-value" id="rc-ic">0.50</div></div>
+        <div class="metric"><div class="metric-label">Chargé à (%)</div><div class="metric-value" id="rc-pct">0</div></div>
+      </div>
+      <div class="info-box"><span class="formula">Vc(t) = V₀(1−e^(−t/τ))</span><br><span class="formula">τ = RC</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAOS (nouveau) - Double pendule -->
+<div class="panel" id="panel-chaos">
+  <div class="sim-grid">
+    <div>
+      <canvas id="c-chaos" width="300" height="260"></canvas>
+      <div class="btn-row">
+        <button class="sb primary" onclick="toggleChaos()">▶ Lancer</button>
+        <button class="sb" onclick="resetChaos()">↺ Reset</button>
+        <button class="sb" onclick="addChaos()">+ Clone</button>
+      </div>
+    </div>
+    <div>
+      <div class="controls">
+        <div class="control-row"><span class="control-label">L1 (m)</span><input type="range" min="0.3" max="1.5" step="0.1" value="0.8" id="ch-l1" oninput="updChaos()"><span class="control-val" id="ch-l1-v">0.8</span></div>
+        <div class="control-row"><span class="control-label">L2 (m)</span><input type="range" min="0.3" max="1.5" step="0.1" value="0.8" id="ch-l2" oninput="updChaos()"><span class="control-val" id="ch-l2-v">0.8</span></div>
+        <div class="control-row"><span class="control-label">Angle θ1 (°)</span><input type="range" min="10" max="170" step="1" value="120" id="ch-a1" oninput="updChaos()"><span class="control-val" id="ch-a1-v">120</span></div>
+        <div class="control-row"><span class="control-label">Angle θ2 (°)</span><input type="range" min="10" max="170" step="1" value="60" id="ch-a2" oninput="updChaos()"><span class="control-val" id="ch-a2-v">60</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Pendules actifs</div><div class="metric-value" id="ch-nb">1</div></div>
+        <div class="metric"><div class="metric-label">Énergie totale</div><div class="metric-value" id="ch-en">—</div></div>
+      </div>
+      <div class="info-box">Le double pendule est un système <strong>chaotique</strong> : de minimes différences initiales divergent exponentiellement (effet papillon).</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ======= UTILS =======
+function isDark() { return window.matchMedia('(prefers-color-scheme:dark)').matches; }
+function switchTab(n) {
+  const names=['pendule','projectile','onde','orbite','ressort','gaz','reaction','adn','circuit','chaos'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===n));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+}
+
+// ======= PENDULE =======
+let pRun=false,pAF=null,pAngle,pVel;
+function updP(){
+  document.getElementById('p-len-v').textContent=parseFloat(document.getElementById('p-len').value).toFixed(1);
+  document.getElementById('p-ang-v').textContent=document.getElementById('p-ang').value;
+  document.getElementById('p-damp-v').textContent=parseFloat(document.getElementById('p-damp').value).toFixed(2);
+  const L=parseFloat(document.getElementById('p-len').value);
+  const T=2*Math.PI*Math.sqrt(L/9.81);
+  document.getElementById('p-T').textContent=T.toFixed(2);
+  document.getElementById('p-F').textContent=(1/T).toFixed(2);
+  const a0=parseFloat(document.getElementById('p-ang').value)*Math.PI/180;
+  document.getElementById('p-vm').textContent=Math.sqrt(2*9.81*L*(1-Math.cos(a0))).toFixed(2);
+  if(!pRun){pAngle=a0;pVel=0;drawPendule();}
+}
+function drawPendule(){
+  const cv=document.getElementById('c-pendule'),ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,300,260);
+  const L=parseFloat(document.getElementById('p-len').value);
+  const sc=100*Math.min(1,1.5/L);
+  const cx=150,cy=35;
+  const px=cx+Math.sin(pAngle)*L*sc,py=cy+Math.cos(pAngle)*L*sc;
+  ctx.strokeStyle=isDark()?'#666':'#bbb';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,py);ctx.stroke();
+  ctx.fillStyle=isDark()?'#B5D4F4':'#185FA5';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=isDark()?'#9FE1CB':'#0F6E56';ctx.beginPath();ctx.arc(px,py,11,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=isDark()?'#888':'#999';ctx.font='11px var(--font-sans)';
+  ctx.fillText('θ = '+(pAngle*180/Math.PI).toFixed(1)+'°',8,252);
+  document.getElementById('p-cur').textContent=(pAngle*180/Math.PI).toFixed(1);
+}
+function togglePendule(){
+  const b=document.querySelector('#panel-pendule .sb.primary');
+  if(pRun){pRun=false;cancelAnimationFrame(pAF);b.textContent='▶ Lancer';}
+  else{pRun=true;b.textContent='⏸ Pause';let last=null;
+    function s(ts){if(!last)last=ts;const dt=Math.min((ts-last)/1000,0.05);last=ts;
+      const L=parseFloat(document.getElementById('p-len').value),d=parseFloat(document.getElementById('p-damp').value);
+      pVel+=(-9.81/L*Math.sin(pAngle)-d*pVel)*dt;pAngle+=pVel*dt;drawPendule();if(pRun)pAF=requestAnimationFrame(s);}
+    pAF=requestAnimationFrame(s);}
+}
+function resetPendule(){pRun=false;cancelAnimationFrame(pAF);document.querySelector('#panel-pendule .sb.primary').textContent='▶ Lancer';
+  pAngle=parseFloat(document.getElementById('p-ang').value)*Math.PI/180;pVel=0;updP();}
+updP();
+
+// ======= PROJECTILE =======
+let prRun=false,prAF=null,prTrail=[];
+function updPr(){
+  document.getElementById('pr-v-v').textContent=document.getElementById('pr-v').value;
+  document.getElementById('pr-a-v').textContent=document.getElementById('pr-a').value;
+  const v0=parseFloat(document.getElementById('pr-v').value),a=parseFloat(document.getElementById('pr-a').value)*Math.PI/180,g=9.81;
+  const T=2*v0*Math.sin(a)/g,R=v0*v0*Math.sin(2*a)/g,H=v0*v0*Math.sin(a)*Math.sin(a)/(2*g);
+  document.getElementById('pr-R').textContent=Math.round(R);
+  document.getElementById('pr-H').textContent=H.toFixed(1);
+  document.getElementById('pr-t').textContent=T.toFixed(2);
+  document.getElementById('pr-vx').textContent=(v0*Math.cos(a)).toFixed(1);
+  if(!prRun)drawProj();
+}
+function drawProj(){
+  const cv=document.getElementById('c-proj'),ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,300,260);
+  const v0=parseFloat(document.getElementById('pr-v').value),a=parseFloat(document.getElementById('pr-a').value)*Math.PI/180,g=9.81;
+  const R=v0*v0*Math.sin(2*a)/g,H=v0*v0*Math.sin(a)*Math.sin(a)/(2*g);
+  const sc=Math.min(260/Math.max(R,1),200/Math.max(H,1))*0.85;
+  const ox=18,oy=242;
+  ctx.strokeStyle=isDark()?'#333':'#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(10,oy);ctx.lineTo(290,oy);ctx.stroke();
+  ctx.strokeStyle=isDark()?'#555':'#ccc';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox,20);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=isDark()?'#B5D4F4':'#185FA5';ctx.lineWidth=1.5;ctx.beginPath();
+  for(let t=0;t<=2*v0*Math.sin(a)/g;t+=0.04){const x=v0*Math.cos(a)*t*sc+ox,y=oy-(v0*Math.sin(a)*t-0.5*g*t*t)*sc;if(t===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+  if(prTrail.length>0){ctx.fillStyle=isDark()?'#9FE1CB':'#0F6E56';for(let p of prTrail){ctx.beginPath();ctx.arc(p[0]*sc+ox,oy-p[1]*sc,2.5,0,Math.PI*2);ctx.fill();}
+    if(prRun){const l=prTrail[prTrail.length-1];ctx.fillStyle=isDark()?'#FAC775':'#BA7517';ctx.beginPath();ctx.arc(l[0]*sc+ox,oy-l[1]*sc,7,0,Math.PI*2);ctx.fill();}}
+}
+function launchProj(){if(prRun)return;prRun=true;prTrail=[];const v0=parseFloat(document.getElementById('pr-v').value),a=parseFloat(document.getElementById('pr-a').value)*Math.PI/180,g=9.81;
+  let t=0;function s(){t+=0.04;const x=v0*Math.cos(a)*t,y=v0*Math.sin(a)*t-0.5*g*t*t;if(y>=0)prTrail.push([x,y]);drawProj();if(y>=0)prAF=requestAnimationFrame(s);else prRun=false;}s();}
+function resetProj(){prRun=false;cancelAnimationFrame(prAF);prTrail=[];drawProj();}
+updPr();
+
+// ======= ONDES =======
+let oRun=false,oAF=null,oTime=0,waves=[{amp:30,freq:1,phase:0}];
+function updO(){
+  document.getElementById('o-amp-v').textContent=document.getElementById('o-amp').value;
+  document.getElementById('o-freq-v').textContent=parseFloat(document.getElementById('o-freq').value).toFixed(1);
+  document.getElementById('o-phase-v').textContent=document.getElementById('o-phase').value;
+  document.getElementById('o-count').textContent=waves.length;
+  document.getElementById('o-mode').textContent=waves.length>1?'Superposé':'Simple';
+  if(!oRun)drawOnde();
+}
+function addWave(){waves.push({amp:parseFloat(document.getElementById('o-amp').value),freq:parseFloat(document.getElementById('o-freq').value),phase:parseFloat(document.getElementById('o-phase').value)*Math.PI/180});updO();}
+function clearWaves(){waves=[{amp:30,freq:1,phase:0}];updO();}
+function drawOnde(){
+  const cv=document.getElementById('c-onde'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const cy=130;ctx.strokeStyle=isDark()?'#333':'#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(300,cy);ctx.stroke();
+  const cols=[isDark()?'#B5D4F4':'#185FA5',isDark()?'#9FE1CB':'#0F6E56',isDark()?'#FAC775':'#BA7517',isDark()?'#F4C0D1':'#993556'];
+  if(waves.length>1){waves.forEach((w,i)=>{ctx.strokeStyle=cols[i%cols.length];ctx.lineWidth=1;ctx.globalAlpha=0.45;ctx.beginPath();
+    for(let x=0;x<300;x++){const y=cy-w.amp*Math.sin(2*Math.PI*w.freq*x/300-2*Math.PI*w.freq*oTime+w.phase);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();});
+    ctx.strokeStyle=isDark()?'#F5C4B3':'#D85A30';ctx.lineWidth=2.5;ctx.globalAlpha=1;ctx.beginPath();
+    for(let x=0;x<300;x++){let y=cy;waves.forEach(w=>y-=w.amp*Math.sin(2*Math.PI*w.freq*x/300-2*Math.PI*w.freq*oTime+w.phase));if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+  }else{ctx.globalAlpha=1;ctx.strokeStyle=cols[0];ctx.lineWidth=2;ctx.beginPath();const w=waves[0];
+    for(let x=0;x<300;x++){const y=cy-w.amp*Math.sin(2*Math.PI*w.freq*x/300-2*Math.PI*w.freq*oTime+w.phase);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}
+  ctx.globalAlpha=1;
+}
+function toggleOnde(){const b=document.querySelector('#panel-onde .sb.primary');
+  if(oRun){oRun=false;cancelAnimationFrame(oAF);b.textContent='▶ Animer';}
+  else{oRun=true;b.textContent='⏸ Pause';let last=null;function s(ts){if(!last)last=ts;oTime+=(ts-last)/1000;last=ts;drawOnde();if(oRun)oAF=requestAnimationFrame(s);}oAF=requestAnimationFrame(s);}}
+updO();
+
+// ======= ORBITES =======
+let obRun=false,obAF=null,obAng=0;
+function updOrb(){
+  document.getElementById('ob-m-v').textContent=parseFloat(document.getElementById('ob-m').value).toFixed(1);
+  document.getElementById('ob-d-v').textContent=parseFloat(document.getElementById('ob-d').value).toFixed(1);
+  document.getElementById('ob-e-v').textContent=parseFloat(document.getElementById('ob-e').value).toFixed(2);
+  const M=parseFloat(document.getElementById('ob-m').value),a=parseFloat(document.getElementById('ob-d').value);
+  document.getElementById('ob-T').textContent=Math.sqrt(a*a*a/M).toFixed(2);
+  document.getElementById('ob-V').textContent=(Math.sqrt(M/a)*29.78).toFixed(1);
+  if(!obRun)drawOrb();
+}
+function drawOrb(){
+  const cv=document.getElementById('c-orb'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const cx=150,cy=130,M=parseFloat(document.getElementById('ob-m').value),dist=parseFloat(document.getElementById('ob-d').value),ecc=parseFloat(document.getElementById('ob-e').value);
+  const sc=70/dist,a=dist*sc,b=a*Math.sqrt(1-ecc*ecc),fd=a*ecc;
+  const sz=6+M*3;ctx.fillStyle=isDark()?'#FAC775':'#BA7517';ctx.beginPath();ctx.arc(cx+fd,cy,sz,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=isDark()?'#444':'#ddd';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.ellipse(cx+fd,cy,a,b,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  const px=cx+fd+a*Math.cos(obAng),py=cy+b*Math.sin(obAng);
+  ctx.strokeStyle=isDark()?'#444':'#ddd';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx+fd,cy);ctx.lineTo(px,py);ctx.stroke();
+  ctx.fillStyle=isDark()?'#B5D4F4':'#185FA5';ctx.beginPath();ctx.arc(px,py,6,0,Math.PI*2);ctx.fill();
+}
+function toggleOrb(){const b=document.querySelector('#panel-orbite .sb.primary');
+  if(obRun){obRun=false;cancelAnimationFrame(obAF);b.textContent='▶ Lancer';}
+  else{obRun=true;b.textContent='⏸ Pause';let last=null;function s(ts){if(!last)last=ts;
+    obAng+=(ts-last)/1000*Math.sqrt(parseFloat(document.getElementById('ob-m').value)/parseFloat(document.getElementById('ob-d').value))*1.5;
+    last=ts;drawOrb();if(obRun)obAF=requestAnimationFrame(s);}obAF=requestAnimationFrame(s);}}
+function resetOrb(){obRun=false;cancelAnimationFrame(obAF);obAng=0;document.querySelector('#panel-orbite .sb.primary').textContent='▶ Lancer';drawOrb();}
+updOrb();
+
+// ======= RESSORT =======
+let rsRun=false,rsAF=null,rsX,rsV,rsHistory=[];
+function updRs(){
+  document.getElementById('rs-k-v').textContent=document.getElementById('rs-k').value;
+  document.getElementById('rs-m-v').textContent=parseFloat(document.getElementById('rs-m').value).toFixed(1);
+  document.getElementById('rs-x0-v').textContent=parseFloat(document.getElementById('rs-x0').value).toFixed(2);
+  document.getElementById('rs-b-v').textContent=parseFloat(document.getElementById('rs-b').value).toFixed(2);
+  const k=parseFloat(document.getElementById('rs-k').value),m=parseFloat(document.getElementById('rs-m').value);
+  const T=2*Math.PI*Math.sqrt(m/k);
+  document.getElementById('rs-T').textContent=T.toFixed(2);
+  document.getElementById('rs-F').textContent=(1/T).toFixed(2);
+  if(!rsRun){rsX=parseFloat(document.getElementById('rs-x0').value);rsV=0;rsHistory=[];drawRessort();}
+}
+function drawRessort(){
+  const cv=document.getElementById('c-ressort'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const cx=150,anchorY=30;
+  const maxX=parseFloat(document.getElementById('rs-x0').value);
+  const scY=80/Math.max(maxX,0.1);
+  const massY=anchorY+130+rsX*scY;
+  ctx.strokeStyle=isDark()?'#888':'#aaa';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx,anchorY);
+  const coils=12,coilW=15;
+  for(let i=0;i<=coils;i++){const y=anchorY+i*(massY-anchorY-20)/coils;const x=cx+(i%2===0?-coilW:coilW);ctx.lineTo(x,y);}
+  ctx.lineTo(cx,massY);ctx.stroke();
+  ctx.fillStyle=isDark()?'#9FE1CB':'#0F6E56';ctx.fillRect(cx-18,massY,36,24);
+  const ratio=(rsX/Math.max(maxX,0.01)+1)/2;
+  ctx.strokeStyle=isDark()?'#555':'#ddd';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,anchorY);ctx.lineTo(280,anchorY);ctx.stroke();
+  if(rsHistory.length>1){ctx.strokeStyle=isDark()?'#B5D4F4':'#185FA5';ctx.lineWidth=1.5;ctx.beginPath();
+    for(let i=0;i<rsHistory.length;i++){const hx=20+i*(260/200),hy=230-rsHistory[i]*scY*0.5;if(i===0)ctx.moveTo(hx,hy);else ctx.lineTo(hx,hy);}ctx.stroke();}
+  document.getElementById('rs-pos').textContent=rsX.toFixed(2);
+  document.getElementById('rs-F2').textContent=(parseFloat(document.getElementById('rs-k').value)*Math.abs(rsX)).toFixed(2);
+}
+function toggleRessort(){const b=document.querySelector('#panel-ressort .sb.primary');
+  if(rsRun){rsRun=false;cancelAnimationFrame(rsAF);b.textContent='▶ Lancer';}
+  else{rsX=parseFloat(document.getElementById('rs-x0').value);rsV=0;rsHistory=[];rsRun=true;b.textContent='⏸ Pause';let last=null;
+    function s(ts){if(!last)last=ts;const dt=Math.min((ts-last)/1000,0.05);last=ts;
+      const k=parseFloat(document.getElementById('rs-k').value),m=parseFloat(document.getElementById('rs-m').value),b2=parseFloat(document.getElementById('rs-b').value);
+      rsV+=(-k*rsX/m-b2*rsV/m)*dt;rsX+=rsV*dt;
+      rsHistory.push(rsX);if(rsHistory.length>200)rsHistory.shift();
+      drawRessort();if(rsRun)rsAF=requestAnimationFrame(s);}rsAF=requestAnimationFrame(s);}}
+function resetRessort(){rsRun=false;cancelAnimationFrame(rsAF);rsHistory=[];document.querySelector('#panel-ressort .sb.primary').textContent='▶ Lancer';updRs();}
+updRs();
+
+// ======= GAZ =======
+let gRun=false,gAF=null,gParts=[];
+function updG(){
+  document.getElementById('g-T-v').textContent=document.getElementById('g-T').value;
+  document.getElementById('g-N-v').textContent=document.getElementById('g-N').value;
+  document.getElementById('g-V-v').textContent=parseFloat(document.getElementById('g-V').value).toFixed(1);
+  const n=parseInt(document.getElementById('g-N').value)/6.022e23,T=parseFloat(document.getElementById('g-T').value),V=parseFloat(document.getElementById('g-V').value)*1e-3;
+  document.getElementById('g-P').textContent=Math.round(n*8.314*T/V/1000);
+  document.getElementById('g-Vm').textContent=Math.round(Math.sqrt(3*8.314*T/0.029));
+  if(!gRun)initGaz();
+}
+function initGaz(){const N=parseInt(document.getElementById('g-N').value),T=parseFloat(document.getElementById('g-T').value);gParts=[];
+  for(let i=0;i<N;i++){const sp=Math.sqrt(T/300)*2,a=Math.random()*2*Math.PI;gParts.push({x:20+Math.random()*260,y:20+Math.random()*220,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:6});}drawGaz();}
+function drawGaz(){const cv=document.getElementById('c-gaz'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const T=parseFloat(document.getElementById('g-T').value),r=T/1000;
+  ctx.strokeStyle=isDark()?'#555':'#ccc';ctx.lineWidth=1;ctx.strokeRect(15,15,270,230);
+  gParts.forEach(p=>{ctx.fillStyle=isDark()?`rgb(${Math.round(55+r*200)},${Math.round(100-r*80)},${Math.round(255-r*200)})`:`rgb(${Math.round(30+r*200)},${Math.round(50-r*40)},${Math.round(220-r*180)})`;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});}
+function toggleGaz(){const b=document.querySelector('#panel-gaz .sb.primary');
+  if(gRun){gRun=false;cancelAnimationFrame(gAF);b.textContent='▶ Simuler';}
+  else{initGaz();gRun=true;b.textContent='⏸ Pause';
+    function s(){const T=parseFloat(document.getElementById('g-T').value),sp=Math.sqrt(T/300)*1.5;
+      gParts.forEach(p=>{p.x+=p.vx*sp*0.5;p.y+=p.vy*sp*0.5;if(p.x<15+p.r){p.x=15+p.r;p.vx*=-1;}if(p.x>285-p.r){p.x=285-p.r;p.vx*=-1;}if(p.y<15+p.r){p.y=15+p.r;p.vy*=-1;}if(p.y>245-p.r){p.y=245-p.r;p.vy*=-1;}});
+      drawGaz();if(gRun)gAF=requestAnimationFrame(s);}gAF=requestAnimationFrame(s);}}
+function resetGaz(){gRun=false;cancelAnimationFrame(gAF);document.querySelector('#panel-gaz .sb.primary').textContent='▶ Simuler';initGaz();}
+updG();
+
+// ======= REACTION =======
+let rxRun=false,rxAF=null,rxData=[],rxTime=0;
+function updRxn(){
+  document.getElementById('rx-A-v').textContent=parseFloat(document.getElementById('rx-A').value).toFixed(1);
+  document.getElementById('rx-k1-v').textContent=parseFloat(document.getElementById('rx-k1').value).toFixed(2);
+  document.getElementById('rx-k2-v').textContent=parseFloat(document.getElementById('rx-k2').value).toFixed(2);
+  document.getElementById('rx-T-v').textContent=document.getElementById('rx-T').value;
+  computeRxn();if(!rxRun)drawRxn();
+}
+function computeRxn(){
+  const A0=parseFloat(document.getElementById('rx-A').value),k1=parseFloat(document.getElementById('rx-k1').value)*parseFloat(document.getElementById('rx-T').value)/300,k2=parseFloat(document.getElementById('rx-k2').value);
+  let A=A0,B=0;rxData=[];const dt=0.1;let teq=0;
+  for(let t=0;t<=30;t+=dt){
+    const dA=(-k1*A+k2*B)*dt;A+=dA;B=A0-A;if(A<0)A=0;if(B<0)B=0;rxData.push({t,A,B});
+    if(teq===0&&Math.abs(dA)<0.001)teq=t;
+  }
+  const last=rxData[rxData.length-1];
+  document.getElementById('rx-Af').textContent=last.A.toFixed(2);
+  document.getElementById('rx-Bf').textContent=last.B.toFixed(2);
+  document.getElementById('rx-teq').textContent=teq.toFixed(1);
+  document.getElementById('rx-conv').textContent=Math.round(last.B/A0*100);
+}
+function drawRxn(){
+  const cv=document.getElementById('c-rxn'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const A0=parseFloat(document.getElementById('rx-A').value);
+  const scX=260/30,scY=200/A0,ox=20,oy=230;
+  ctx.strokeStyle=isDark()?'#333':'#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ox,20);ctx.lineTo(ox,oy);ctx.lineTo(280,oy);ctx.stroke();
+  ctx.fillStyle=isDark()?'#888':'#aaa';ctx.font='10px var(--font-sans)';ctx.fillText('[A]',ox+4,18);ctx.fillText('[B]',ox+30,18);ctx.fillText('t(s)',270,oy-2);
+  const maxT=rxRun?rxTime:30;
+  const sub=rxData.filter(d=>d.t<=maxT);
+  if(sub.length>1){
+    ctx.strokeStyle=isDark()?'#B5D4F4':'#185FA5';ctx.lineWidth=2;ctx.beginPath();
+    sub.forEach((d,i)=>{const x=ox+d.t*scX,y=oy-d.A*scY;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();
+    ctx.strokeStyle=isDark()?'#9FE1CB':'#0F6E56';ctx.lineWidth=2;ctx.beginPath();
+    sub.forEach((d,i)=>{const x=ox+d.t*scX,y=oy-d.B*scY;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();
+  }
+}
+function toggleRxn(){const b=document.querySelector('#panel-reaction .sb.primary');
+  if(rxRun){rxRun=false;cancelAnimationFrame(rxAF);b.textContent='▶ Réagir';rxTime=30;drawRxn();}
+  else{computeRxn();rxTime=0;rxRun=true;b.textContent='⏸ Pause';let last=null;
+    function s(ts){if(!last)last=ts;rxTime+=Math.min((ts-last)/1000*3,(ts-last)/100);last=ts;if(rxTime>30){rxTime=30;rxRun=false;b.textContent='▶ Réagir';}drawRxn();if(rxRun)rxAF=requestAnimationFrame(s);}rxAF=requestAnimationFrame(s);}}
+function resetRxn(){rxRun=false;cancelAnimationFrame(rxAF);rxTime=0;document.querySelector('#panel-reaction .sb.primary').textContent='▶ Réagir';computeRxn();drawRxn();}
+updRxn();
+
+// ======= ADN =======
+let adnRun=false,adnAF=null,adnAngle=0,adnBases=[],adnMuts=0;
+function getBaseColors(){return{A:{f:isDark()?'#B5D4F4':'#185FA5',l:'A-T'},T:{f:isDark()?'#9FE1CB':'#0F6E56',l:'A-T'},G:{f:isDark()?'#FAC775':'#BA7517',l:'G-C'},C:{f:isDark()?'#F4C0D1':'#993556',l:'G-C'}};}
+function initAdn(){const n=parseInt(document.getElementById('adn-n').value);adnBases=[];const pairs=[['A','T'],['G','C']];
+  for(let i=0;i<n;i++){const p=pairs[Math.floor(Math.random()*2)];adnBases.push({l:p[0],r:p[1],mut:false});}
+  adnMuts=0;document.getElementById('adn-mut').textContent=0;document.getElementById('adn-stab').textContent=100;
+  const at=adnBases.filter(b=>b.l==='A').length,gc=adnBases.filter(b=>b.l==='G').length;
+  document.getElementById('adn-at').textContent=at;document.getElementById('adn-gc').textContent=gc;drawAdn();}
+function drawAdn(){
+  const cv=document.getElementById('c-adn'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const n=adnBases.length,cx=150,spY=240/n;
+  const bc=getBaseColors();
+  adnBases.forEach((b,i)=>{
+    const y=15+i*spY+spY/2;const angle=adnAngle+i*(Math.PI*2/n)*1.5;
+    const lx=cx-40+Math.cos(angle)*35,rx=cx+40-Math.cos(angle)*35;
+    ctx.strokeStyle=b.mut?(isDark()?'#F09595':'#E24B4A'):(isDark()?'#555':'#ccc');ctx.lineWidth=b.mut?2:1;
+    ctx.beginPath();ctx.moveTo(lx,y);ctx.lineTo(rx,y);ctx.stroke();
+    const lc=b.mut?(isDark()?'#F09595':'#E24B4A'):bc[b.l].f;
+    const rc=b.mut?(isDark()?'#F09595':'#E24B4A'):bc[b.r].f;
+    ctx.fillStyle=lc;ctx.beginPath();ctx.arc(lx,y,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=rc;ctx.beginPath();ctx.arc(rx,y,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=isDark()?'#aaa':'#555';ctx.font='8px var(--font-sans)';
+    ctx.fillText(b.l,lx-3,y+3);ctx.fillText(b.r,rx-3,y+3);
+  });
+}
+function updAdn(){
+  document.getElementById('adn-spd-v').textContent=parseFloat(document.getElementById('adn-spd').value).toFixed(1);
+  document.getElementById('adn-n-v').textContent=document.getElementById('adn-n').value;
+  initAdn();
+}
+function mutateAdn(){
+  const i=Math.floor(Math.random()*adnBases.length);adnBases[i].mut=true;adnMuts++;
+  document.getElementById('adn-mut').textContent=adnMuts;
+  document.getElementById('adn-stab').textContent=Math.max(0,Math.round((1-adnMuts/adnBases.length)*100));
+  drawAdn();
+}
+function toggleAdn(){const b=document.querySelector('#panel-adn .sb.primary');
+  if(adnRun){adnRun=false;cancelAnimationFrame(adnAF);b.textContent='▶ Tourner';}
+  else{adnRun=true;b.textContent='⏸ Pause';let last=null;
+    function s(ts){if(!last)last=ts;adnAngle+=parseFloat(document.getElementById('adn-spd').value)*(ts-last)/1000*2;last=ts;drawAdn();if(adnRun)adnAF=requestAnimationFrame(s);}adnAF=requestAnimationFrame(s);}}
+function resetAdn(){adnRun=false;cancelAnimationFrame(adnAF);adnAngle=0;document.querySelector('#panel-adn .sb.primary').textContent='▶ Tourner';initAdn();}
+updAdn();
+
+// ======= CIRCUIT RC =======
+let rcRun=false,rcAF=null,rcT=0,rcCharging=true,rcHistory=[];
+function updRC(){
+  document.getElementById('rc-R-v').textContent=document.getElementById('rc-R').value;
+  document.getElementById('rc-C-v').textContent=document.getElementById('rc-C').value;
+  document.getElementById('rc-V-v').textContent=parseFloat(document.getElementById('rc-V').value).toFixed(1);
+  const R=parseFloat(document.getElementById('rc-R').value)*1000,C=parseFloat(document.getElementById('rc-C').value)*1e-6;
+  document.getElementById('rc-tau').textContent=Math.round(R*C*1000);
+  if(!rcRun){rcT=0;rcHistory=[];drawRC();}
+}
+function drawRC(){
+  const cv=document.getElementById('c-rc'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const V0=parseFloat(document.getElementById('rc-V').value),R=parseFloat(document.getElementById('rc-R').value)*1000,C=parseFloat(document.getElementById('rc-C').value)*1e-6;
+  const tau=R*C,maxT=5*tau,ox=20,oy=230,scX=260/maxT,scY=180/V0;
+  ctx.strokeStyle=isDark()?'#333':'#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ox,50);ctx.lineTo(ox,oy);ctx.lineTo(280,oy);ctx.stroke();
+  for(let v=0;v<=V0;v+=V0/4){ctx.fillStyle=isDark()?'#666':'#aaa';ctx.font='9px var(--font-sans)';ctx.fillText(v.toFixed(1)+'V',2,oy-v*scY+3);}
+  ctx.strokeStyle=isDark()?'#555':'#ddd';ctx.setLineDash([3,3]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ox,oy-V0*scY);ctx.lineTo(280,oy-V0*scY);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=isDark()?'#B5D4F4':'#185FA5';ctx.lineWidth=2;ctx.beginPath();
+  for(let t=0;t<=Math.min(rcT,maxT);t+=maxT/200){
+    const vc=rcCharging?V0*(1-Math.exp(-t/tau)):V0*Math.exp(-t/tau);
+    const x=ox+t*scX,y=oy-vc*scY;if(t===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+  const vc=rcCharging?V0*(1-Math.exp(-rcT/tau)):V0*Math.exp(-rcT/tau);
+  const ic=rcCharging?(V0-vc)/R*1000:vc/R*1000;
+  document.getElementById('rc-vc').textContent=vc.toFixed(2);
+  document.getElementById('rc-ic').textContent=ic.toFixed(3);
+  document.getElementById('rc-pct').textContent=Math.round((rcCharging?vc:V0-vc)/V0*100);
+  if(rcT>0){const x=ox+rcT*scX,y=oy-vc*scY;ctx.fillStyle=isDark()?'#FAC775':'#BA7517';ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();}
+}
+function toggleRC(){const b=document.querySelector('#panel-circuit .sb.primary');
+  if(rcRun){rcRun=false;cancelAnimationFrame(rcAF);b.textContent='▶ Charger';}
+  else{rcT=0;rcCharging=true;rcRun=true;b.textContent='⏸ Pause';let last=null;
+    const R=parseFloat(document.getElementById('rc-R').value)*1000,C=parseFloat(document.getElementById('rc-C').value)*1e-6,tau=R*C;
+    function s(ts){if(!last)last=ts;rcT+=Math.min((ts-last)/1000,0.05)*1;last=ts;drawRC();if(rcT<5*tau&&rcRun)rcAF=requestAnimationFrame(s);else{rcRun=false;b.textContent='▶ Charger';}}rcAF=requestAnimationFrame(s);}}
+function dischargeRC(){rcT=0;rcCharging=false;rcRun=true;const b=document.querySelector('#panel-circuit .sb.primary');b.textContent='⏸ Pause';let last=null;
+  const R=parseFloat(document.getElementById('rc-R').value)*1000,C=parseFloat(document.getElementById('rc-C').value)*1e-6,tau=R*C;
+  function s(ts){if(!last)last=ts;rcT+=(ts-last)/1000;last=ts;drawRC();if(rcT<5*tau&&rcRun)rcAF=requestAnimationFrame(s);else{rcRun=false;b.textContent='▶ Charger';}}rcAF=requestAnimationFrame(s);}
+function resetRC(){rcRun=false;cancelAnimationFrame(rcAF);rcT=0;rcCharging=true;document.querySelector('#panel-circuit .sb.primary').textContent='▶ Charger';drawRC();}
+updRC();
+
+// ======= CHAOS (double pendule) =======
+let chRun=false,chAF=null,chPendules=[];
+const colors=['#185FA5','#993556','#0F6E56','#BA7517'];
+const colorsDk=['#B5D4F4','#F4C0D1','#9FE1CB','#FAC775'];
+function mkPendule(a1,a2,l1,l2){return{a1,a2,v1:0,v2:0,l1,l2,trail:[]};}
+function initChaos(){
+  const a1=parseFloat(document.getElementById('ch-a1').value)*Math.PI/180;
+  const a2=parseFloat(document.getElementById('ch-a2').value)*Math.PI/180;
+  const l1=parseFloat(document.getElementById('ch-l1').value);
+  const l2=parseFloat(document.getElementById('ch-l2').value);
+  chPendules=[mkPendule(a1,a2,l1,l2)];
+  document.getElementById('ch-nb').textContent=1;drawChaos();}
+function addChaos(){
+  if(chPendules.length>=4)return;
+  const p=chPendules[0];
+  chPendules.push(mkPendule(p.a1+0.001,p.a2,p.l1,p.l2));
+  document.getElementById('ch-nb').textContent=chPendules.length;
+}
+function stepChaos(p,dt){
+  const g=9.81,m=1,l1=p.l1,l2=p.l2;
+  const d=p.a1-p.a2;
+  const denom1=l1*(2*m-m*Math.cos(2*d));
+  const denom2=l2*(2*m-m*Math.cos(2*d));
+  const a1acc=(-g*(2*m)*Math.sin(p.a1)-m*g*Math.sin(p.a1-2*p.a2)-2*Math.sin(d)*m*(p.v2*p.v2*l2+p.v1*p.v1*l1*Math.cos(d)))/denom1;
+  const a2acc=(2*Math.sin(d)*(p.v1*p.v1*l1*(2*m)+g*(2*m)*Math.cos(p.a1)+p.v2*p.v2*l2*m*Math.cos(d)))/denom2;
+  p.v1+=a1acc*dt;p.v2+=a2acc*dt;p.a1+=p.v1*dt;p.a2+=p.v2*dt;
+}
+function drawChaos(){
+  const cv=document.getElementById('c-chaos'),ctx=cv.getContext('2d');ctx.clearRect(0,0,300,260);
+  const cx=150,cy=80;
+  const l1=parseFloat(document.getElementById('ch-l1').value),l2=parseFloat(document.getElementById('ch-l2').value);
+  const sc=70/(l1+l2);
+  chPendules.forEach((p,idx)=>{
+    const x1=cx+Math.sin(p.a1)*l1*sc,y1=cy+Math.cos(p.a1)*l1*sc;
+    const x2=x1+Math.sin(p.a2)*l2*sc,y2=y1+Math.cos(p.a2)*l2*sc;
+    p.trail.push([x2,y2]);if(p.trail.length>120)p.trail.shift();
+    const col=isDark()?colorsDk[idx]:colors[idx];
+    if(p.trail.length>2){ctx.strokeStyle=col;ctx.globalAlpha=0.3;ctx.lineWidth=1;ctx.beginPath();
+      p.trail.forEach((pt,i)=>{if(i===0)ctx.moveTo(pt[0],pt[1]);else ctx.lineTo(pt[0],pt[1]);});ctx.stroke();ctx.globalAlpha=1;}
+    if(idx===0){ctx.strokeStyle=isDark()?'#666':'#bbb';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+    ctx.fillStyle=isDark()?'#555':'#ddd';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(x1,y1,7,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(x2,y2,7,0,Math.PI*2);ctx.fill();
+  });
+  const E=0.5*1*(chPendules[0].v1*chPendules[0].v1+chPendules[0].v2*chPendules[0].v2);
+  document.getElementById('ch-en').textContent=E.toFixed(1)+' J';
+}
+function updChaos(){
+  document.getElementById('ch-l1-v').textContent=parseFloat(document.getElementById('ch-l1').value).toFixed(1);
+  document.getElementById('ch-l2-v').textContent=parseFloat(document.getElementById('ch-l2').value).toFixed(1);
+  document.getElementById('ch-a1-v').textContent=document.getElementById('ch-a1').value;
+  document.getElementById('ch-a2-v').textContent=document.getElementById('ch-a2').value;
+  if(!chRun)initChaos();
+}
+function toggleChaos(){const b=document.querySelector('#panel-chaos .sb.primary');
+  if(chRun){chRun=false;cancelAnimationFrame(chAF);b.textContent='▶ Lancer';}
+  else{initChaos();chRun=true;b.textContent='⏸ Pause';let last=null;
+    function s(ts){if(!last)last=ts;const dt=Math.min((ts-last)/1000,0.02);last=ts;
+      for(let i=0;i<5;i++)chPendules.forEach(p=>stepChaos(p,dt/5));
+      drawChaos();if(chRun)chAF=requestAnimationFrame(s);}chAF=requestAnimationFrame(s);}}
+function resetChaos(){chRun=false;cancelAnimationFrame(chAF);document.querySelector('#panel-chaos .sb.primary').textContent='▶ Lancer';initChaos();}
+updChaos();
+</script>
