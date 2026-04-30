@@ -2,7 +2,7 @@
 
 > 10 simulations physiques, chimiques et biologiques entièrement dans le navigateur — aucune dépendance, pur HTML/CSS/JS vanilla.
 
-![Version](https://img.shields.io/badge/version-2.0-blue) ![Licence](https://img.shields.io/badge/licence-MIT-green) ![Taille](https://img.shields.io/badge/taille-fichier%20unique-orange)
+![Version](https://img.shields.io/badge/version-1.0-blue) ![Licence](https://img.shields.io/badge/licence-MIT-green) ![Taille](https://img.shields.io/badge/taille-fichier%20unique-orange)
 
 ---
 
