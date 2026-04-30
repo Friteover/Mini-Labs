@@ -49,7 +49,7 @@ open index.html
 
 Ou directement via GitHub Pages :
 ```
-(https://friteover.github.io/Mini-Labs/)
+https://friteover.github.io/Mini-Labs/
 ```
 
 ---
