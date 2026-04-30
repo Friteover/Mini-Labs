@@ -118,4 +118,4 @@ MIT — libre d'utilisation pour l'éducation et les projets personnels.
 
 ---
 
-<p align="center">Fait avec ❤️ pour la vulgarisation scientifique</p>
+<p align="center">Crée Par Friteover</p>
